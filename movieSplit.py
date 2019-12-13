@@ -39,7 +39,17 @@ def movie_split(movie_path,out_movie_path,start_time,end_time):
     else:
         return False
 
+def movie_cut(movie_path,out_movie_path,start_time,duration):
+    out, err = (
+        ffmpeg
+            # 注意ss，t的单位都是秒
+            .input(input_file, ss=start_time, t=duration)
+            .output(output_file, codec="copy")
+            .run(quiet=False, overwrite_output=True)
+    )
+    if out == b'':
+        print('do nothing')
 
-
+        
 if __name__ == '__main__':
     pass
