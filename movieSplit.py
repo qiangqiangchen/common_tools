@@ -1,55 +1,66 @@
 import cv2
+import ffmpeg
+import os
+import numpy as np
+from skimage.measure import compare_ssim
+import time
 
 
-def movie_caption_extract():
-    movie_path = r'F:\movie\xinling.mp4'
+def movie_caption_extract(movie_path):
     split_path = r'F:\movie\split'
+    if not os.path.exists(split_path):
+        os.makedirs(split_path)
     capture = cv2.VideoCapture(movie_path)
+    tmp=np.zeros((98,1280), np.uint8)
+    black_img=np.zeros((98,1280), np.uint8)
     while (capture.isOpened()):
         ret, frame = capture.read()
         if ret:
             gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             height, width = gray.shape[:2]
-            caption = gray[int(height * 0.83):int(height * 0.98), 0:width]
-            cv2.imshow('video_caption', caption)
-            cv2.imshow('video', gray)
-            if cv2.waitKey(10) == ord('q'):
-                break
+            caption = gray[int(height * 0.84):int(height * 0.98), 0:width]
+            ret, th = cv2.threshold(caption, 235, 255, cv2.THRESH_BINARY)
+            kernel1 = np.ones((25, 25), np.uint8)
+            # 膨胀
+            dilation = cv2.dilate(th, kernel1)
+            kernel2 = cv2.getStructuringElement(cv2.MORPH_RECT, (30, 30))
+            opening = cv2.morphologyEx(dilation, cv2.MORPH_OPEN, kernel2)
+            closing = cv2.morphologyEx(opening, cv2.MORPH_CLOSE, kernel2)
+            if comp_img(black_img,closing,0.95):
+                #print('图片为纯黑')
+                pass
+            elif comp_img(tmp,closing,0.9):
+                #print('与上一张相同')
+                pass
+            else:
+                tmp=closing
+                print('图片保存')
+                cv2.imwrite(r'E:\Temp\zimu\{}.jpg'.format(int(time.time()*1000)),gray)
+
+
+            # cv2.imshow('video_caption', th)
+            # cv2.imshow('dilation', dilation)
+            # cv2.imshow('opening', opening)
+
+            # cv2.imshow('closing', closing)
+            # if cv2.waitKey(10) == ord('q'):
+            #     break
         else:
             break
 
-def timeformat(t):
-    if t <60:
-        h=0
-        m=0
-        s=t
-    else:
-        h=int(t/3600)
-        m=int((t-3600*h)/60)
-        s=t%60
-    print("{}:{}:{}".format(h,m,s))
-    return "{}:{}:{}".format(h,m,s)
 
-def movie_split(movie_path,out_movie_path,start_time,end_time):
-    if isinstance(start_time,int) and  isinstance(end_time,int):
-        start_time=timeformat(start_time)
-        end_time=timeformat(end_time)
-        cmd="ffmpeg -ss {} -t {} -i {} -vcodec copy -acodec copy {}".format(start_time,end_time,movie_path,out_movie_path)
+def comp_img(img,img2,template):
+    score,diff=compare_ssim(img,img2,full=True)
+    if score>=template:
         return True
-    else:
-        return False
+    return False
 
-def movie_cut(movie_path,out_movie_path,start_time,duration):
-    out, err = (
-        ffmpeg
-            # 注意ss，t的单位都是秒
-            .input(input_file, ss=start_time, t=duration)
-            .output(output_file, codec="copy")
-            .run(quiet=False, overwrite_output=True)
-    )
-    if out == b'':
-        print('do nothing')
 
-        
+
 if __name__ == '__main__':
-    pass
+    in_movie_name = r'E:\Temp\xinling.mp4'
+    out_movie_name = r'E:\Temp\movie_temp\new2.mp4'
+    frame_img = r'E:\Temp\frame.jpg'
+    movie_dir = r'E:\Temp\movie_temp'
+    movie_caption_extract(out_movie_name)
+    # print(int(time.time()*1000))

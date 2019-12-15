@@ -32,14 +32,15 @@ def pdfMerge(filepath, outfile):
     outputPages = 0
     pdf_fileName = getFileName(filepath)
     for i in pdf_fileName:
-        print("正在合并:{}".format(i))
+        print(u"正在合并:{}".format(i))
         input = PdfFileReader(open(i, 'rb'))
         pageCount = input.getNumPages()
         print(pageCount)
         for page in range(pageCount):
             output.addPage(input.getPage(page))
-            print("------>正在写入第{}页".format(page))
+            #print(u"------>正在写入第{}页".format(page))
     output.write(open(outfile, 'wb'))
+    print(u"<------{}  写入完成".format(outfile))
 
 def img_to_pdf(filepath, outfile):
     img_list=getFileName(filepath,filter=['jpg','jpeg','png'])
@@ -47,12 +48,13 @@ def img_to_pdf(filepath, outfile):
     layout_fun=img2pdf.get_layout_fun(a4input)
     with open(outfile,'wb') as f:
         f.write(img2pdf.convert(img_list,layout_fun=layout_fun))
-    print("{}写入完成".format(outfile))
+    print("u{}写入完成".format(outfile))
 
 if __name__ == "__main__":
-    img_dir=r'E:\pandownload\韩漫\中文合集8部\约炮APP 1-6\1'
+    base_dir=r'E:\Temp\分类\图片\【重金自购】【实力坑女友系列】被男友换图流出的姑娘们精品11'
     #pdf_dir = r"XXXXX"
-    out_path = r"F:\piccc\pic.pdf"
-    # pdfMerge(pdf_dir, out_path)
-    # img_to_pdf(img_dir,out_path)
+    pdf_name=base_dir.split("\\")[-1]
+    out_path=os.path.join(r"E:\Temp\分类\hanman",pdf_name+'.pdf')
+    #pdfMerge(base_dir, out_path)
+    img_to_pdf(base_dir,out_path)
 
